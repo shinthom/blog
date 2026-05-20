@@ -279,8 +279,43 @@ export default function Editor({ initial }: { initial: EditorInitial }) {
           />
         )}
         {mode !== "edit" && (
-          <div className="editor-preview markdown-body">
-            <MarkdownView source={content || "*Nothing to preview yet.*"} />
+          <div className="editor-preview">
+            <div className="markdown-body editor-preview-inner">
+              <h1>{title || "Untitled"}</h1>
+              <small>
+                {(() => {
+                  const d = new Date();
+                  const months = [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                  ];
+                  return `${d.getUTCFullYear()} ${months[d.getUTCMonth()]} ${String(
+                    d.getUTCDate(),
+                  ).padStart(2, "0")}`;
+                })()}
+                {category
+                  ? ` · ${
+                      siteConfig.categories.find((c) => c.slug === category)
+                        ?.label ?? category
+                    }`
+                  : ""}
+              </small>
+              <div style={{ marginTop: "1.5em" }}>
+                <MarkdownView
+                  source={content || "*Nothing to preview yet.*"}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
