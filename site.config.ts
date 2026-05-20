@@ -8,7 +8,7 @@ export const siteConfig = {
     { slug: "game", label: "Game", fontSize: "100%" },
     { slug: "blockchain", label: "Blockchain", fontSize: "100%" },
     { slug: "ai", label: "AI", fontSize: "100%" },
-    { slug: "unreal-engine", label: "Unreal Engine", fontSize: "90%" },
+    { slug: "unreal-engine", label: "UE", fontSize: "100%" },
   ],
 } as const;
 
