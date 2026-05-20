@@ -50,6 +50,44 @@ export default function Editor({ initial }: { initial: EditorInitial }) {
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const syncingRef = useRef<"edit" | "preview" | null>(null);
+
+  const ratio = (el: HTMLElement) => {
+    const max = el.scrollHeight - el.clientHeight;
+    if (max <= 0) return 0;
+    return el.scrollTop / max;
+  };
+  const applyRatio = (el: HTMLElement, r: number) => {
+    const max = el.scrollHeight - el.clientHeight;
+    el.scrollTop = Math.max(0, Math.min(max, r * max));
+  };
+
+  const onEditScroll = useCallback(() => {
+    if (mode !== "split") return;
+    if (syncingRef.current === "preview") {
+      syncingRef.current = null;
+      return;
+    }
+    const ed = textareaRef.current;
+    const pv = previewRef.current;
+    if (!ed || !pv) return;
+    syncingRef.current = "edit";
+    applyRatio(pv, ratio(ed));
+  }, [mode]);
+
+  const onPreviewScroll = useCallback(() => {
+    if (mode !== "split") return;
+    if (syncingRef.current === "edit") {
+      syncingRef.current = null;
+      return;
+    }
+    const ed = textareaRef.current;
+    const pv = previewRef.current;
+    if (!ed || !pv) return;
+    syncingRef.current = "preview";
+    applyRatio(ed, ratio(pv));
+  }, [mode]);
 
   useEffect(() => {
     if (!slugTouched) setSlug(deriveSlug(title));
@@ -143,6 +181,72 @@ export default function Editor({ initial }: { initial: EditorInitial }) {
       }
     },
     [content],
+  );
+
+  // Wraps the current textarea selection in `marker` on both sides, or
+  // toggles it off if the selection is already surrounded by `marker`.
+  // With no selection, inserts the markers and places the caret between them.
+  const wrapSelection = useCallback((marker: string) => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+
+    setContent((curr) => {
+      const before = curr.slice(0, start);
+      const selected = curr.slice(start, end);
+      const after = curr.slice(end);
+
+      const wrappedAround =
+        before.endsWith(marker) && after.startsWith(marker);
+      // Also handle the case where the user selected ALONG WITH the markers,
+      // e.g. "**bold**" — strip them in that case too.
+      const wrappedInside =
+        selected.startsWith(marker) &&
+        selected.endsWith(marker) &&
+        selected.length >= marker.length * 2;
+
+      let next: string;
+      let newStart: number;
+      let newEnd: number;
+
+      if (wrappedAround) {
+        next = before.slice(0, -marker.length) + selected + after.slice(marker.length);
+        newStart = start - marker.length;
+        newEnd = end - marker.length;
+      } else if (wrappedInside) {
+        const inner = selected.slice(marker.length, -marker.length);
+        next = before + inner + after;
+        newStart = start;
+        newEnd = end - marker.length * 2;
+      } else {
+        next = before + marker + selected + marker + after;
+        newStart = start + marker.length;
+        newEnd = end + marker.length;
+      }
+
+      requestAnimationFrame(() => {
+        ta.focus();
+        ta.setSelectionRange(newStart, newEnd);
+      });
+      return next;
+    });
+  }, []);
+
+  const handleEditorKey = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (k === "b") {
+        e.preventDefault();
+        wrapSelection("**");
+      } else if (k === "i") {
+        e.preventDefault();
+        wrapSelection("*");
+      }
+    },
+    [wrapSelection],
   );
 
   // Ctrl/Cmd+S to save
@@ -275,11 +379,17 @@ export default function Editor({ initial }: { initial: EditorInitial }) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onPaste={handlePaste}
+            onKeyDown={handleEditorKey}
+            onScroll={onEditScroll}
             spellCheck={false}
           />
         )}
         {mode !== "edit" && (
-          <div className="editor-preview">
+          <div
+            className="editor-preview"
+            ref={previewRef}
+            onScroll={onPreviewScroll}
+          >
             <div className="markdown-body editor-preview-inner">
               <h1>{title || "Untitled"}</h1>
               <small>
