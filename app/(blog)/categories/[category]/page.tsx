@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import CategoryNav from "@/components/CategoryNav";
 import PostList from "@/components/PostList";
@@ -37,7 +38,11 @@ export default async function CategoryPage({
   return (
     <>
       <br />
-      <h1 style={{ borderBottom: 0, textAlign: "center" }}>{cat.label}</h1>
+      <h1 style={{ borderBottom: 0, textAlign: "center" }}>
+        <Link href="/" className="site-title-link">
+          {siteConfig.title}
+        </Link>
+      </h1>
       <CategoryNav />
       <br />
       <PostList posts={posts} />

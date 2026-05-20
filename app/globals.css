@@ -550,3 +550,12 @@ svg {
   color: var(--color-anchor);
 }
 .admin-menu span { opacity: 0.45; }
+
+/* Site title acts as a "home" link but should look like plain heading text. */
+.site-title-link {
+  color: var(--color-heading);
+  text-decoration: none;
+}
+.site-title-link:hover {
+  text-decoration: none;
+}

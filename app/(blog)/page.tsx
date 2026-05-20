@@ -1,3 +1,4 @@
+import Link from "next/link";
 import CategoryNav from "@/components/CategoryNav";
 import PostList from "@/components/PostList";
 import { listPublishedPosts } from "@/lib/posts";
@@ -11,7 +12,9 @@ export default async function Home() {
     <>
       <br />
       <h1 style={{ borderBottom: 0, textAlign: "center" }}>
-        {siteConfig.title}
+        <Link href="/" className="site-title-link">
+          {siteConfig.title}
+        </Link>
       </h1>
       <CategoryNav />
       <br />
