@@ -248,14 +248,21 @@ export function formatPostDate(iso: string | null | undefined): string {
   ).padStart(2, "0")}`;
 }
 
+// Only ASCII letters/digits + hyphens are allowed in slugs.
+// Anything else (including Hangul, CJK, accented chars) is stripped.
 export function slugify(input: string): string {
   return (
     input
       .toLowerCase()
       .trim()
-      .replace(/[^\p{L}\p{N}\s-]/gu, "")
+      .replace(/[^a-z0-9\s-]/g, "")
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "") || `post-${Date.now()}`
   );
+}
+
+// Returns true if the string only contains characters allowed in a final slug.
+export function isValidSlug(s: string): boolean {
+  return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(s);
 }

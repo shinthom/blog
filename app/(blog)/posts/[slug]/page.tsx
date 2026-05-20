@@ -5,6 +5,7 @@ import {
   formatPostDate,
   getPublishedPostBySlug,
 } from "@/lib/posts";
+import { isAdminVisitor } from "@/lib/admin-ip";
 import { siteConfig } from "@/site.config";
 
 export const revalidate = 30;
@@ -33,11 +34,27 @@ export default async function PostPage({
   if (!post) notFound();
 
   const category = siteConfig.categories.find((c) => c.slug === post.category);
+  const canEdit = await isAdminVisitor();
 
   return (
     <article>
-      <p style={{ marginTop: "1em" }}>
+      <p
+        style={{
+          marginTop: "1em",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+        }}
+      >
         <Link href="/">&larr; Home</Link>
+        {canEdit ? (
+          <Link
+            href={`/write?id=${post.id}`}
+            style={{ fontSize: "0.85rem" }}
+          >
+            Edit
+          </Link>
+        ) : null}
       </p>
       <h1>{post.title}</h1>
       <small>

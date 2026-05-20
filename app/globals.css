@@ -1,3 +1,6 @@
+/* Force light mode everywhere, including 404 + form controls. */
+html { color-scheme: light; }
+
 /* ---------- Design tokens ---------- */
 :root {
   --color-bg: #fff;

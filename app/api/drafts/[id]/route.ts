@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import {
   deleteDraft,
   getPostById,
   isSlugTaken,
+  isValidSlug,
   slugify,
   updateDraftRow,
 } from "@/lib/posts";
@@ -47,7 +49,17 @@ export async function PUT(
         : null;
   }
   if (body.slug !== undefined && body.slug.trim()) {
-    const candidate = slugify(body.slug.trim());
+    const raw = body.slug.trim();
+    if (!isValidSlug(raw)) {
+      return NextResponse.json(
+        {
+          error:
+            "Slug must contain only lowercase ASCII letters, digits, and hyphens (no Hangul or other Unicode).",
+        },
+        { status: 400 },
+      );
+    }
+    const candidate = slugify(raw);
     if (candidate !== existing.slug) {
       if (await isSlugTaken(candidate, id)) {
         return NextResponse.json(
@@ -61,6 +73,16 @@ export async function PUT(
 
   try {
     const row = await updateDraftRow(id, patch);
+    // If the post is already published, the change should reach the public
+    // pages right away (we leave status as-is — the editor saves drafts and
+    // edits-in-place; status only flips via /publish).
+    if (existing.status === "published") {
+      revalidatePath("/");
+      revalidatePath(`/posts/${row.slug}`);
+      if (row.slug !== existing.slug) revalidatePath(`/posts/${existing.slug}`);
+      if (existing.category) revalidatePath(`/categories/${existing.category}`);
+      revalidatePath("/feed.xml");
+    }
     return NextResponse.json(row);
   } catch (e) {
     return NextResponse.json(

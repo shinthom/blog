@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   createDraft,
   isSlugTaken,
+  isValidSlug,
   slugify,
 } from "@/lib/posts";
 import { siteConfig } from "@/site.config";
@@ -34,7 +35,19 @@ export async function POST(req: Request) {
   }
 
   const title = (body.title ?? "").trim() || "Untitled";
-  const baseSlug = slugify(body.slug?.trim() || title);
+
+  // If the user gave an explicit slug, refuse anything that isn't pure ASCII.
+  const explicitSlug = body.slug?.trim();
+  if (explicitSlug && !isValidSlug(explicitSlug)) {
+    return NextResponse.json(
+      {
+        error:
+          "Slug must contain only lowercase ASCII letters, digits, and hyphens (no Hangul or other Unicode).",
+      },
+      { status: 400 },
+    );
+  }
+  const baseSlug = slugify(explicitSlug || title);
   const slug = await uniqueSlug(baseSlug);
   const category =
     body.category && validCategories.has(body.category) ? body.category : null;

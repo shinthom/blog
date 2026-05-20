@@ -27,12 +27,14 @@ function deriveSlug(title: string): string {
     title
       .toLowerCase()
       .trim()
-      .replace(/[^\p{L}\p{N}\s-]/gu, "")
+      .replace(/[^a-z0-9\s-]/g, "")
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "") || `post-${Date.now()}`
   );
 }
+
+const VALID_SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export default function Editor({ initial }: { initial: EditorInitial }) {
   const router = useRouter();
@@ -175,7 +177,20 @@ export default function Editor({ initial }: { initial: EditorInitial }) {
                 setSlug(e.target.value);
                 setSlugTouched(true);
               }}
+              aria-invalid={slug !== "" && !VALID_SLUG_RE.test(slug)}
             />
+            {slug !== "" && !VALID_SLUG_RE.test(slug) ? (
+              <em
+                style={{
+                  color: "#c0392b",
+                  fontSize: "0.72rem",
+                  marginTop: 2,
+                  fontStyle: "normal",
+                }}
+              >
+                Use lowercase a–z, 0–9, and hyphens only.
+              </em>
+            ) : null}
           </label>
           <label>
             <span>Category</span>

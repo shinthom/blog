@@ -1,5 +1,5 @@
 import Editor, { type EditorInitial } from "@/components/Editor";
-import { getDraftById } from "@/lib/posts";
+import { getPostById } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
 
@@ -24,15 +24,17 @@ export default async function WritePage({
   };
 
   if (id) {
-    const draft = await getDraftById(id);
-    if (draft) {
+    // Accept either a draft or an already-published post — editing in place
+    // is allowed from admin IPs.
+    const post = await getPostById(id);
+    if (post) {
       initial = {
-        id: draft.id,
-        title: draft.title,
-        slug: draft.slug,
-        category: draft.category,
-        excerpt: draft.excerpt ?? "",
-        content: draft.content,
+        id: post.id,
+        title: post.title,
+        slug: post.slug,
+        category: post.category,
+        excerpt: post.excerpt ?? "",
+        content: post.content,
       };
     }
   }
