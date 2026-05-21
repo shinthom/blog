@@ -559,3 +559,15 @@ svg {
 .site-title-link:hover {
   text-decoration: none;
 }
+
+/* Inline Delete button next to the Edit link on published posts. */
+.post-admin-delete {
+  font: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #c0392b;
+  cursor: pointer;
+}
+.post-admin-delete:hover { text-decoration: underline; }
+.post-admin-delete:disabled { opacity: 0.6; cursor: not-allowed; }

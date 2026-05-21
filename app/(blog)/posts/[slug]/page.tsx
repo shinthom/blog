@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import MarkdownView from "@/components/MarkdownView";
+import PostAdminActions from "@/components/PostAdminActions";
 import {
   formatPostDate,
   getPublishedPostBySlug,
@@ -48,12 +49,7 @@ export default async function PostPage({
       >
         <Link href="/">&larr; Home</Link>
         {canEdit ? (
-          <Link
-            href={`/write?id=${post.id}`}
-            style={{ fontSize: "0.85rem" }}
-          >
-            Edit
-          </Link>
+          <PostAdminActions id={post.id} title={post.title} />
         ) : null}
       </p>
       <h1>{post.title}</h1>

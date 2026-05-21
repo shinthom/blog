@@ -98,7 +98,17 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
+    // Look the post up first so that if it was already published we know
+    // which public routes need a cache bust after deletion.
+    const existing = await getPostById(id);
     await deleteDraft(id);
+    if (existing?.status === "published") {
+      revalidatePath("/");
+      revalidatePath(`/posts/${existing.slug}`);
+      if (existing.category)
+        revalidatePath(`/categories/${existing.category}`);
+      revalidatePath("/feed.xml");
+    }
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json(
